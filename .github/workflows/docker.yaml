@@ -24,7 +24,7 @@ jobs:
         include:
           - dockerfile: ./kujirad/Dockerfile
             image: ghcr.io/defiantlabs/kujirad
-            tag: v0.7.2
+            tag: v0.7.1
           - dockerfile: ./osmosisd/Dockerfile
             image: ghcr.io/defiantlabs/osmosisd
             tag: v13.1.2
