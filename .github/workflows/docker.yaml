@@ -18,6 +18,16 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./kujirad/Dockerfile
+            image: ghcr.io/defiantlabs/kujirad
+            tag: v0.7.2
+          - dockerfile: osmosisd/Dockerfile
+            image: ghcr.io/defiantlabs/osmosisd
+            tag: v13.1.2
     permissions:
       contents: read
       packages: write
@@ -44,39 +54,28 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ matrix.image }}
           labels: |
             maintainer=danb
-            org.opencontainers.image.source=https://github.com/defiantlabs/cosmos-tax-cli-private
-            org.opencontainers.image.title=cosmos-tax-cli-private
-            org.opencontainers.image.description=Opensource Cosmos Tax Tool
+            org.opencontainers.image.source=https://github.com/defiantlabs/externalPackages
+            org.opencontainers.image.title=externalPackages
+            org.opencontainers.image.description=Container Images for External Packages
             org.opencontainers.image.vendor=Defiant
           tags: |
-            type=sha,enable=true,prefix=sha-,suffix=,format=short,priority=1
-            type=semver,pattern={{raw}},priority=2
-            type=edge,branch=main,priority=3
-            type=ref,event=branch,priority=4
-            type=ref,event=tag,priority=5
-            type=ref,event=pr,priority=6
+            type=raw,enable=true,priority=1,prefix={{ matrix.tag }}
+            type=sha,enable=true,prefix=sha-,suffix=,format=short,priority=2
+            type=semver,pattern={{raw}},priority=3
+            type=edge,branch=main,priority=4
+            type=ref,event=branch,priority=5
+            type=ref,event=tag,priority=6
+            type=ref,event=pr,priority=7
 
-      - name: Build and push Osmosis Docker image
+      - name: Build and push Docker images
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64
-          file: Dockerfile-osmosisd
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Kujira Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          platforms: linux/amd64
-          file: Dockerfile-osmosisd
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
