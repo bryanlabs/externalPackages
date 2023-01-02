@@ -25,7 +25,7 @@ jobs:
           - dockerfile: ./kujirad/Dockerfile
             image: ghcr.io/defiantlabs/kujirad
             tag: v0.7.2
-          - dockerfile: osmosisd/Dockerfile
+          - dockerfile: ./osmosisd/Dockerfile
             image: ghcr.io/defiantlabs/osmosisd
             tag: v13.1.2
     permissions:
@@ -76,6 +76,7 @@ jobs:
           context: .
           platforms: linux/amd64
           file: ${{ matrix.dockerfile }}
+          build-args: VERSION=${{ matrix.tag }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -8,7 +8,7 @@ ARG TARGETPLATFORM
 # Use muslc for static libs
 ARG BUILD_TAGS=muslc,netgo
 ARG LD_FLAGS=-linkmode=external -extldflags '-Wl,-z,muldefs -static'
-ARG KUJIRA_VERSION=v0.7.1
+ARG VERSION
 
 # Install cli tools for building and final image
 RUN apk add --update --no-cache make git libc-dev bash gcc linux-headers eudev-dev ncurses-dev libc6-compat openssh curl jq
@@ -29,7 +29,7 @@ WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/core.git
 WORKDIR /go/src/github.com/Team-Kujira/core
 RUN git fetch
-RUN git checkout ${KUJIRA_VERSION}
+RUN git checkout ${VERSION}
 WORKDIR /go/src/github.com/Team-Kujira/core/cmd/kujirad
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
