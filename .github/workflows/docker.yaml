@@ -62,7 +62,7 @@ jobs:
             org.opencontainers.image.description=Container Images for External Packages
             org.opencontainers.image.vendor=Defiant
           tags: |
-            type=raw,enable=true,priority=1,prefix=${{ matrix.tag }}
+            type=raw,enable=true,priority=1,prefix=,suffix=,value=${{ matrix.tag }}
             type=sha,enable=true,prefix=sha-,suffix=,format=short,priority=2
             type=semver,pattern={{raw}},priority=3
             type=edge,branch=main,priority=4
