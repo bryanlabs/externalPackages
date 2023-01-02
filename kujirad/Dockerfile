@@ -24,7 +24,7 @@ RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
       cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a ; \
     fi
 
-# Build Kujira
+# Build
 WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/core.git
 WORKDIR /go/src/github.com/Team-Kujira/core

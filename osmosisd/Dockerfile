@@ -24,7 +24,7 @@ RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
       cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a ; \
     fi
 
-# Build Osmosis
+# Build
 WORKDIR /go/src/github.com/osmosis-labs
 RUN git clone https://github.com/osmosis-labs/osmosis.git
 WORKDIR /go/src/github.com/osmosis-labs/osmosis
