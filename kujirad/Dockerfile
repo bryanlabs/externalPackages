@@ -7,11 +7,13 @@ ARG TARGETPLATFORM
 
 # Use muslc for static libs
 ARG BUILD_TAGS=muslc,netgo
-ARG LD_FLAGS=-linkmode=external -extldflags '-Wl,-z,muldefs -static'
 ARG VERSION
+ARG LD_FLAGS=-linkmode=external \
+-extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
-RUN apk add --update --no-cache make git libc-dev bash gcc linux-headers eudev-dev ncurses-dev libc6-compat openssh curl jq
+RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
+RUN apk add --no-cache musl-dev
 
 # Install build dependencies.
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
@@ -33,11 +35,13 @@ RUN git checkout ${VERSION}
 WORKDIR /go/src/github.com/Team-Kujira/core/cmd/kujirad
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+      # LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+      BUILD_TAGS=muslc make install ; \
     fi
 
 RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+      # LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+      BUILD_TAGS=muslc make install ; \
     fi
 
 # Use busybox to create a user
