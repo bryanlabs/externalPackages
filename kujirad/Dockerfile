@@ -32,7 +32,7 @@ RUN git clone https://github.com/Team-Kujira/core.git
 WORKDIR /go/src/github.com/Team-Kujira/core
 RUN git fetch
 RUN git checkout ${VERSION}
-WORKDIR /go/src/github.com/Team-Kujira/core/cmd/kujirad
+WORKDIR /go/src/github.com/Team-Kujira/core
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
       # LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
