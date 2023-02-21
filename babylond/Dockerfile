@@ -45,70 +45,70 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
       BUILD_TAGS=muslc make install ; \
     fi
 
-# # Use busybox to create a user
-# FROM busybox:stable-musl AS busybox
-# RUN addgroup --gid 1137 -S defiant && adduser --uid 1137 -S defiant -G defiant
+# Use busybox to create a user
+FROM busybox:stable-musl AS busybox
+RUN addgroup --gid 1137 -S defiant && adduser --uid 1137 -S defiant -G defiant
 
-# # Use scratch for the final image
-# FROM scratch
-# WORKDIR /home/defiant
+# Use scratch for the final image
+FROM scratch
+WORKDIR /home/defiant
 
-# # Label should match your github repo
-# LABEL org.opencontainers.image.source="https://github.com/defiantlabs/babylond"
+# Label should match your github repo
+LABEL org.opencontainers.image.source="https://github.com/defiantlabs/babylond"
 
-# # Installs all binaries built with go.
-# COPY --from=build-env /go/bin /bin
+# Installs all binaries built with go.
+COPY --from=build-env /go/bin /bin
 
-# # Other binaries we want to keep.
-# COPY --from=build-env /usr/bin/ldd /bin/ldd
-# COPY --from=build-env /usr/bin/curl /bin/curl
-# COPY --from=build-env /usr/bin/jq /bin/jq
+# Other binaries we want to keep.
+COPY --from=build-env /usr/bin/ldd /bin/ldd
+COPY --from=build-env /usr/bin/curl /bin/curl
+COPY --from=build-env /usr/bin/jq /bin/jq
 
-# # Install Libraries
-# COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
-# COPY --from=build-env /lib/ld-musl*.so.1* /lib
+# Install Libraries
+COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
+COPY --from=build-env /lib/ld-musl*.so.1* /lib
 
-# # jq Libraries
-# COPY --from=build-env /usr/lib/libonig.so.5 /lib
+# jq Libraries
+COPY --from=build-env /usr/lib/libonig.so.5 /lib
 
-# # curl Libraries
-# COPY --from=build-env /usr/lib/libcurl.so.4 /lib
-# COPY --from=build-env /lib/libz.so.1 /lib
-# COPY --from=build-env /usr/lib/libnghttp2.so.14 /lib
-# COPY --from=build-env /lib/libssl.so.1.1 /lib
-# COPY --from=build-env /lib/libcrypto.so.1.1 /lib
-# COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
-# COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
+# curl Libraries
+COPY --from=build-env /usr/lib/libcurl.so.4 /lib
+COPY --from=build-env /lib/libz.so.1 /lib
+COPY --from=build-env /usr/lib/libnghttp2.so.14 /lib
+COPY --from=build-env /lib/libssl.so.1.1 /lib
+COPY --from=build-env /lib/libcrypto.so.1.1 /lib
+COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
+COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
 
-# # Install trusted CA certificates
-# COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
+# Install trusted CA certificates
+COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
 
-# # Install cli tools from busybox
-# COPY --from=busybox /bin/ln /bin/ln
-# COPY --from=busybox /bin/dd /bin/dd
-# COPY --from=busybox /bin/vi /bin/vi
-# COPY --from=busybox /bin/chown /bin/chown
-# COPY --from=busybox /bin/id /bin/id
-# COPY --from=busybox /bin/cp /bin/cp
-# COPY --from=busybox /bin/ls /bin/ls
-# COPY --from=busybox /bin/busybox /bin/sh
-# COPY --from=busybox /bin/cat /bin/cat
-# COPY --from=busybox /bin/less /bin/less
-# COPY --from=busybox /bin/grep /bin/grep
-# COPY --from=busybox /bin/sleep /bin/sleep
-# COPY --from=busybox /bin/env /bin/env
-# COPY --from=busybox /bin/tar /bin/tar
-# COPY --from=busybox /bin/tee /bin/tee
-# COPY --from=busybox /bin/du /bin/du
-# COPY --from=busybox /bin/df /bin/df
-# COPY --from=busybox /bin/nc /bin/nc
-# COPY --from=busybox /bin/netstat /bin/netstat
+# Install cli tools from busybox
+COPY --from=busybox /bin/ln /bin/ln
+COPY --from=busybox /bin/dd /bin/dd
+COPY --from=busybox /bin/vi /bin/vi
+COPY --from=busybox /bin/chown /bin/chown
+COPY --from=busybox /bin/id /bin/id
+COPY --from=busybox /bin/cp /bin/cp
+COPY --from=busybox /bin/ls /bin/ls
+COPY --from=busybox /bin/busybox /bin/sh
+COPY --from=busybox /bin/cat /bin/cat
+COPY --from=busybox /bin/less /bin/less
+COPY --from=busybox /bin/grep /bin/grep
+COPY --from=busybox /bin/sleep /bin/sleep
+COPY --from=busybox /bin/env /bin/env
+COPY --from=busybox /bin/tar /bin/tar
+COPY --from=busybox /bin/tee /bin/tee
+COPY --from=busybox /bin/du /bin/du
+COPY --from=busybox /bin/df /bin/df
+COPY --from=busybox /bin/nc /bin/nc
+COPY --from=busybox /bin/netstat /bin/netstat
 
-# # Copy user from busybox to scratch
-# COPY --from=busybox /etc/passwd /etc/passwd
-# COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
+# Copy user from busybox to scratch
+COPY --from=busybox /etc/passwd /etc/passwd
+COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
 
-# # Set home directory and user
-# WORKDIR /home/defiant
-# RUN chown -R defiant /home/defiant
-# USER defiant
+# Set home directory and user
+WORKDIR /home/defiant
+RUN chown -R defiant /home/defiant
+USER defiant
