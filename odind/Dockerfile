@@ -61,8 +61,8 @@ COPY --from=build-env /go/bin /bin
 # Install Libraries
 COPY --from=build-env /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/
 COPY --from=build-env /lib/x86_64-linux-gnu/libdl.so.2 /lib/
-COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.0.0/api/libwasmvm.x86_64.so /lib
-COPY --from=build-env /go/pkg/mod/github.com/slandymani/go-owasm@v0.2.0/api/libgo_owasm.so /lib
+# COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.0.0/api/libwasmvm.x86_64.so /lib
+# COPY --from=build-env /go/pkg/mod/github.com/slandymani/go-owasm@v0.2.0/api/libgo_owasm.so /lib
 COPY --from=build-env /lib/x86_64-linux-gnu/librt.so.1 /lib
 
 # Other binaries we want to keep.
