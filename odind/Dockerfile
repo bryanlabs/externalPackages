@@ -12,7 +12,7 @@ ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
-RUN apt-get update -y 
+RUN apt-get update -y
 RUN apt-get install -y make git bash gcc ncurses-dev curl jq musl-dev openssl
 
 # Install build dependencies.

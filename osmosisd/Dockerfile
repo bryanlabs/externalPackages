@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine3.16 AS build-env
+FROM golang:1.19-alpine3.16 AS build-env
 
 # Customize to your build env
 
@@ -32,7 +32,6 @@ RUN git clone https://github.com/osmosis-labs/osmosis.git
 WORKDIR /go/src/github.com/osmosis-labs/osmosis
 RUN git fetch
 RUN git checkout ${VERSION}
-# WORKDIR /go/src/github.com/osmosis-labs/osmosis/cmd/osmosisd
 WORKDIR /go/src/github.com/osmosis-labs/osmosis
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
