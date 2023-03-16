@@ -4,7 +4,7 @@ FROM golang:1.19 AS builder
 
 # Use muslc for static libs
 ARG BUILD_TAGS=netgo
-ARG ORACLE_VERSION
+ARG ORACLE_VERSION=master
 ARG KUJIRA_VERSION=v0.7.1
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
@@ -31,11 +31,14 @@ RUN git checkout ${KUJIRA_VERSION}
 WORKDIR /go/src/github.com/Team-Kujira/core
 RUN make install
 
-FROM alpine:latest 
-COPY --from=builder /go/bin/price-feeder /usr/local/bin
-COPY --from=builder /go/bin/kujirad /usr/local/bin
-RUN apk add --no-cache bash
-RUN apk add --no-cache gcc
+
 COPY commands.sh /scripts/commands.sh
 RUN ["chmod", "+x", "/scripts/commands.sh"]
 ENTRYPOINT ["/scripts/commands.sh"]
+
+RUN adduser --system --uid 1137 --shell /bin/bash defiant
+RUN addgroup -system --gid 1137 defiant
+
+WORKDIR /home/defiant
+RUN chown -R defiant /home/defiant
+USER defiant
