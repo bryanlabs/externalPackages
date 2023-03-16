@@ -22,10 +22,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - dockerfile: ./osmosisd/Dockerfile
-            image: ghcr.io/defiantlabs/osmosisd
-            tag: v15.0.0
-            platforms: linux/amd64,linux/arm64
+          # - dockerfile: ./osmosisd/Dockerfile
+          #   image: ghcr.io/defiantlabs/osmosisd
+          #   tag: v15.0.0
+          #   platforms: linux/amd64,linux/arm64
           # - dockerfile: ./kujirad/Dockerfile
           #   image: ghcr.io/defiantlabs/kujirad
           #   tag: v0.7.1
@@ -42,6 +42,10 @@ jobs:
           #   image: ghcr.io/defiantlabs/odind
           #   tag: v0.6.2
           #   platforms: linux/amd64
+          - dockerfile: ./price-feeder/Dockerfile
+            image: ghcr.io/defiantlabs/kujirad
+            tag: v0.4.0
+            platforms: linux/amd64
     permissions:
       contents: read
       packages: write
