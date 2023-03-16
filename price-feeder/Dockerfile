@@ -11,7 +11,7 @@ ARG LD_FLAGS=-linkmode=external \
 
 # Install cli tools for building and final image
 RUN apt-get update -y
-RUN apt-get install -y make git bash gcc ncurses-dev
+RUN apt-get install -y make git bash gcc ncurses-dev iputils-ping curl jq openssl
 
 # Build Oracle
 WORKDIR /go/src/github.com/Team-Kujira
@@ -32,13 +32,13 @@ WORKDIR /go/src/github.com/Team-Kujira/core
 RUN make install
 
 
-COPY commands.sh /scripts/commands.sh
-RUN ["chmod", "+x", "/scripts/commands.sh"]
-ENTRYPOINT ["/scripts/commands.sh"]
-
 RUN adduser --system --uid 1137 --shell /bin/bash defiant
 RUN addgroup -system --gid 1137 defiant
 
 WORKDIR /home/defiant
+COPY entrypoint.sh /home/defiant/entrypoint.sh
+RUN ["chmod", "+x", "/home/defiant/entrypoint.sh"]
+ENTRYPOINT ["/home/defiant/entrypoint.sh"]
+
 RUN chown -R defiant /home/defiant
 USER defiant
