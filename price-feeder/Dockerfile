@@ -36,7 +36,7 @@ RUN adduser --system --uid 1137 --shell /bin/bash defiant
 RUN addgroup -system --gid 1137 defiant
 
 WORKDIR /home/defiant
-COPY entrypoint.sh /home/defiant/entrypoint.sh
+COPY ./price-feeder/entrypoint.sh /home/defiant/entrypoint.sh
 RUN ["chmod", "+x", "/home/defiant/entrypoint.sh"]
 ENTRYPOINT ["/home/defiant/entrypoint.sh"]
 
