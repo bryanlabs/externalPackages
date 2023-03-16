@@ -54,7 +54,7 @@ RUN addgroup -system --gid 1137 defiant
 # RUN addgroup --gid 1137 --system defiant && adduser --uid 1137 --system defiant --group defiant
 
 # # # Label should match your github repo
-# LABEL org.opencontainers.image.source="https://github.com/defiantlabs/odin-cored"
+LABEL org.opencontainers.image.source="https://github.com/defiantlabs/odind"
 
 # # Installs all binaries built with go.
 # COPY --from=build-env /go/bin /bin
