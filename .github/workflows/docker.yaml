@@ -28,7 +28,7 @@ jobs:
           # #   platforms: linux/amd64,linux/arm64
           - dockerfile: ./kujirad/Dockerfile
             image: ghcr.io/defiantlabs/kujirad
-            tag: v0.7.1
+            tag: v0.8.4
           #   platforms: linux/amd64,linux/arm64
           # - dockerfile: ./junod/Dockerfile
           #   image: ghcr.io/defiantlabs/junod
