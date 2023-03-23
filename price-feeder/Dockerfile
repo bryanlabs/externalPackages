@@ -4,8 +4,8 @@ FROM golang:1.19 AS builder
 
 # Use muslc for static libs
 ARG BUILD_TAGS=netgo
-ARG ORACLE_VERSION=master
-ARG KUJIRA_VERSION=v0.8.4
+ARG ORACLE_VERSION=v0.1.1
+ARG KUJIRA_VERSION=v0.8.4-mainnet
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 

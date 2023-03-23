@@ -23,7 +23,7 @@ RUN git fetch
 RUN git checkout ${VERSION}
 WORKDIR /go/src/github.com/Team-Kujira/core
 
-RUN make install 
+RUN make install
 RUN adduser --system --uid 1137 defiant
 RUN addgroup -system --gid 1137 defiant
 
