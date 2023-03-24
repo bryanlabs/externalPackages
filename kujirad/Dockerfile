@@ -1,12 +1,10 @@
 FROM golang:1.19-alpine3.16 AS build-env
 
-# Customize to your build env
-
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM
 
 # Use muslc for static libs
-ARG BUILD_TAGS=muslc,netgo
+ARG BUILD_TAGS="muslc"
 ARG VERSION
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
@@ -15,18 +13,18 @@ ARG LD_FLAGS=-linkmode=external \
 RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
 RUN apk add --no-cache musl-dev
 
-# Install build dependencies.
+# Install CosmWasm.
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a ; \
+      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.2.0/libwasmvm_muslc.x86_64.a ; \
       cp /lib/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.a ; \
     fi
 
 RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.aarch64.a ; \
+      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.2.0/libwasmvm_muslc.aarch64.a ; \
       cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a ; \
     fi
 
-# Build
+# Build Chain Binary
 WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/core.git
 WORKDIR /go/src/github.com/Team-Kujira/core
@@ -35,13 +33,27 @@ RUN git checkout ${VERSION}
 WORKDIR /go/src/github.com/Team-Kujira/core
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      # LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
-      BUILD_TAGS=muslc make install ; \
+      BUILD_TAGS=${BUILD_TAGS} make install ; \
     fi
 
 RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      # LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
-      BUILD_TAGS=muslc make install ; \
+      BUILD_TAGS=${BUILD_TAGS} make install ; \
+    fi
+
+# Build Oracle
+ARG ORACLE_VERSION=v0.1.1
+WORKDIR /go/src/github.com/Team-Kujira
+RUN git clone https://github.com/Team-Kujira/oracle-price-feeder.git
+WORKDIR /go/src/github.com/Team-Kujira/oracle-price-feeder
+RUN git fetch
+RUN git checkout ${ORACLE_VERSION}
+
+RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
+      LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+    fi
+
+RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
+      LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
     fi
 
 # Use busybox to create a user
@@ -50,13 +62,14 @@ RUN addgroup --gid 1137 -S defiant && adduser --uid 1137 -S defiant -G defiant
 
 # Use scratch for the final image
 FROM scratch
-WORKDIR /home/defiant
+WORKDIR /bin
 
 # Label should match your github repo
-LABEL org.opencontainers.image.source="https://github.com/defiantlabs/kujirad"
+LABEL org.opencontainers.image.source="https://github.com/defiantchain/kujirad:${VERSION}"
 
 # Installs all binaries built with go.
-COPY --from=build-env /go/bin /bin
+COPY --from=build-env /go/bin/kujirad /bin
+COPY --from=build-env /go/bin/price-feeder /bin
 
 # Other binaries we want to keep.
 COPY --from=build-env /usr/bin/ldd /bin/ldd
@@ -79,29 +92,37 @@ COPY --from=build-env /lib/libcrypto.so.1.1 /lib
 COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
 COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
 
-# Install trusted CA certificates
+# Install trusted CA certificates for curl
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
 
 # Install cli tools from busybox
 COPY --from=busybox /bin/ln /bin/ln
-COPY --from=busybox /bin/dd /bin/dd
-COPY --from=busybox /bin/vi /bin/vi
-COPY --from=busybox /bin/chown /bin/chown
-COPY --from=busybox /bin/id /bin/id
-COPY --from=busybox /bin/cp /bin/cp
-COPY --from=busybox /bin/ls /bin/ls
-COPY --from=busybox /bin/busybox /bin/sh
-COPY --from=busybox /bin/cat /bin/cat
-COPY --from=busybox /bin/less /bin/less
-COPY --from=busybox /bin/grep /bin/grep
-COPY --from=busybox /bin/sleep /bin/sleep
-COPY --from=busybox /bin/env /bin/env
-COPY --from=busybox /bin/tar /bin/tar
-COPY --from=busybox /bin/tee /bin/tee
-COPY --from=busybox /bin/du /bin/du
-COPY --from=busybox /bin/df /bin/df
-COPY --from=busybox /bin/nc /bin/nc
-COPY --from=busybox /bin/netstat /bin/netstat
+COPY --from=busybox /bin/ln /bin/sh
+
+# Link each binary you want to sh to save space.
+RUN for binary in \
+dd \
+vi \
+chown \
+id \
+cp \
+ls \
+sh \
+cat \
+less \
+grep \
+sleep \
+env \
+tar \
+tee \
+du \
+sort \
+head \
+df \
+nc \
+netstat \
+; do ln sh $binary; done
+
 
 # Copy user from busybox to scratch
 COPY --from=busybox /etc/passwd /etc/passwd

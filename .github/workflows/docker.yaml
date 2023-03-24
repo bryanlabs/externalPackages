@@ -28,7 +28,7 @@ jobs:
           # #   platforms: linux/amd64,linux/arm64
           - dockerfile: ./kujirad_amd64/Dockerfile
             image: ghcr.io/defiantlabs/kujirad
-            tag: v0.8.4
+            tag: v0.8.4-mainnet
           #   platforms: linux/amd64,linux/arm64
           # - dockerfile: ./junod/Dockerfile
           #   image: ghcr.io/defiantlabs/junod
@@ -42,10 +42,6 @@ jobs:
           #   image: ghcr.io/defiantlabs/odind
           #   tag: v0.6.2
           #   platforms: linux/amd64
-          - dockerfile: ./price-feeder/Dockerfile
-            image: ghcr.io/defiantlabs/price-feeder
-            tag: v0.1.1
-            platforms: linux/amd64
     permissions:
       contents: read
       packages: write
