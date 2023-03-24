@@ -39,7 +39,7 @@ RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
     fi
 
 RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+      GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
     fi
 
 # Use busybox to create a user
