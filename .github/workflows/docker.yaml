@@ -36,7 +36,7 @@ jobs:
           #   tag: v13.0.0
           - dockerfile: ./gaiad/Dockerfile
             image: ghcr.io/defiantlabs/gaiad
-            platforms: linux/amd64,linux/arm64
+            platforms: linux/amd64
             tag: v9.0.2-reece
           # - dockerfile: ./babylond/Dockerfile
           #   image: ghcr.io/defiantlabs/babylond
