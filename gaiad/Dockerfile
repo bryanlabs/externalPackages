@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine3.16 AS build-env
+FROM golang:1.18-alpine3.16 AS build-env
 
 # Customize to your build env
 
@@ -8,23 +8,10 @@ ARG TARGETPLATFORM
 # Use muslc for static libs
 ARG BUILD_TAGS=muslc
 ARG VERSION
-ARG LD_FLAGS=-linkmode=external \
--extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
 RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
 RUN apk add --no-cache musl-dev
-
-# Install build dependencies.
-# RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-#       wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a ; \
-#       cp /lib/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.a ; \
-#     fi
-
-# RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-#       wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.aarch64.a ; \
-#       cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a ; \
-#     fi
 
 # Build
 WORKDIR /go/src/github.com/DefiantLabs
@@ -32,14 +19,14 @@ RUN git clone https://github.com/DefiantLabs/gaia.git
 WORKDIR /go/src/github.com/DefiantLabs/gaia
 RUN git fetch
 RUN git checkout ${VERSION}
-WORKDIR /go/src/github.com/DefiantLabs/gaia/cmd/gaiad
+WORKDIR /go/src/github.com/DefiantLabs/gaia
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+      BUILD_TAGS=${BUILD_TAGS} make install ; \
     fi
 
 RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
+      BUILD_TAGS=${BUILD_TAGS} make install ; \
     fi
 
 # Use busybox to create a user
