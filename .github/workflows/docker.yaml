@@ -30,10 +30,14 @@ jobs:
           #   image: ghcr.io/defiantlabs/kujirad
           #   platforms: linux/amd64,linux/arm64
           #   tag: v0.8.4-mainnet
-          - dockerfile: ./junod/Dockerfile
-            image: ghcr.io/defiantlabs/junod
+          # - dockerfile: ./junod/Dockerfile
+          #   image: ghcr.io/defiantlabs/junod
+          #   platforms: linux/amd64,linux/arm64
+          #   tag: v13.0.0
+          - dockerfile: ./gaiad/Dockerfile
+            image: ghcr.io/defiantlabs/gaiad
             platforms: linux/amd64,linux/arm64
-            tag: v13.0.0
+            tag: v9.0.2
           # - dockerfile: ./babylond/Dockerfile
           #   image: ghcr.io/defiantlabs/babylond
           #   platforms: linux/amd64,linux/arm64

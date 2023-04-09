@@ -27,12 +27,12 @@ RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
     fi
 
 # Build
-WORKDIR /go/src/github.com/CosmosContracts
-RUN git clone https://github.com/CosmosContracts/juno.git
-WORKDIR /go/src/github.com/CosmosContracts/juno
+WORKDIR /go/src/github.com/cosmos
+RUN git clone https://github.com/cosmos/gaia.git
+WORKDIR /go/src/github.com/cosmos/juno
 RUN git fetch
 RUN git checkout ${VERSION}
-WORKDIR /go/src/github.com/CosmosContracts/juno/cmd/junod
+WORKDIR /go/src/github.com/cosmos/juno/cmd/gaiad
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
       GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
@@ -51,10 +51,10 @@ FROM scratch
 WORKDIR /bin
 
 # Label should match your github repo
-LABEL org.opencontainers.image.source="https://github.com/defiantlabs/junod:${VERSION}"
+LABEL org.opencontainers.image.source="https://github.com/defiantlabs/gaiad:${VERSION}"
 
 # Installs all binaries built with go.
-COPY --from=build-env /go/bin/junod /bin
+COPY --from=build-env /go/bin/gaiad /bin
 
 # Other binaries we want to keep.
 COPY --from=build-env /usr/bin/ldd /bin/ldd
