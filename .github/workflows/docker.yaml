@@ -22,10 +22,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - dockerfile: ./osmosisd/Dockerfile
-          #   image: ghcr.io/defiantlabs/osmosisd
-          #   platforms: linux/amd64,linux/arm64
-          #   tag: v15.0.0
+          - dockerfile: ./osmosisd/Dockerfile
+            image: ghcr.io/defiantlabs/osmosisd
+            platforms: linux/amd64,linux/arm64
+            tag: v15.1.0
           # - dockerfile: ./kujirad/Dockerfile
           #   image: ghcr.io/defiantlabs/kujirad
           #   platforms: linux/amd64,linux/arm64
@@ -34,10 +34,10 @@ jobs:
           #   image: ghcr.io/defiantlabs/junod
           #   platforms: linux/amd64,linux/arm64
           #   tag: v13.0.0
-          - dockerfile: ./gaiad/Dockerfile
-            image: ghcr.io/defiantlabs/gaiad
-            platforms: linux/amd64
-            tag: v9.0.2-reece
+          # - dockerfile: ./gaiad/Dockerfile
+          #   image: ghcr.io/defiantlabs/gaiad
+          #   platforms: linux/amd64
+          #   tag: v9.0.2-reece
           # - dockerfile: ./babylond/Dockerfile
           #   image: ghcr.io/defiantlabs/babylond
           #   platforms: linux/amd64,linux/arm64
