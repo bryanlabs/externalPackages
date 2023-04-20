@@ -17,12 +17,12 @@ RUN apk add --no-cache musl-dev
 
 # Install build dependencies.
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a ; \
+      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.2/libwasmvm_muslc.x86_64.a ; \
       cp /lib/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.a ; \
     fi
 
 RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.aarch64.a ; \
+      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.2/libwasmvm_muslc.aarch64.a ; \
       cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a ; \
     fi
 
