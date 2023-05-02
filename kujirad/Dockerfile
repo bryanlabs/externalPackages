@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine3.16 AS build-env
+FROM golang:1.19.7-alpine3.16 AS build-env
 
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM
