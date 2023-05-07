@@ -41,7 +41,7 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
     fi
 
 # Build Oracle
-ARG ORACLE_VERSION=v0.3.1
+ARG ORACLE_VERSION=v0.4.1
 WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/oracle-price-feeder.git
 WORKDIR /go/src/github.com/Team-Kujira/oracle-price-feeder
@@ -94,6 +94,7 @@ COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
 
 # Install trusted CA certificates for curl
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
+COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/certs/ca-certificates.crt
 
 # Install cli tools from busybox
 COPY --from=busybox /bin/ln /bin/ln
@@ -106,6 +107,7 @@ vi \
 chown \
 id \
 cp \
+mkdir \
 ls \
 sh \
 cat \
