@@ -41,7 +41,7 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
     fi
 
 # Build Oracle
-ARG ORACLE_VERSION=v0.4.1
+ARG ORACLE_VERSION=v0.4.2
 WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/oracle-price-feeder.git
 WORKDIR /go/src/github.com/Team-Kujira/oracle-price-feeder
