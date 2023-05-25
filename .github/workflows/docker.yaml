@@ -22,14 +22,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - dockerfile: ./osmosisd/Dockerfile
-          #   image: ghcr.io/defiantlabs/osmosisd
-          #   platforms: linux/amd64
-          #   tag: v15.1.0
+          - dockerfile: ./osmosisd/Dockerfile
+            image: ghcr.io/defiantlabs/osmosisd
+            platforms: linux/amd64
+            tag: v15.1.2
           - dockerfile: ./kujirad/Dockerfile
             image: ghcr.io/defiantlabs/kujirad
             platforms: linux/amd64
-            tag: v0.8.4-mainnet
+            tag: v0.8.6
           # - dockerfile: ./junod/Dockerfile
           #   image: ghcr.io/defiantlabs/junod
           #   platforms: linux/amd64
