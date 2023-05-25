@@ -104,5 +104,7 @@ COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
 
 # Set home directory and user
 WORKDIR /home/defiant
+RUN echo "alias rly='rly --home /home/relayer'" >> .profile
+
 RUN chown -R defiant /home/defiant
 USER defiant
