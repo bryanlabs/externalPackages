@@ -6,6 +6,7 @@ ARG TARGETPLATFORM
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
 ARG VERSION
+ARG ORACLE_VERSION=v0.5.0
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
@@ -41,7 +42,6 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
     fi
 
 # Build Oracle
-ARG ORACLE_VERSION=v0.4.2
 WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/oracle-price-feeder.git
 WORKDIR /go/src/github.com/Team-Kujira/oracle-price-feeder
