@@ -6,24 +6,13 @@ ARG TARGETPLATFORM
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
 ARG VERSION
-ARG ORACLE_VERSION=v0.6.0
+ARG ORACLE_VERSION=v0.6.1
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
 RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
 RUN apk add --no-cache musl-dev
-
-# Install CosmWasm.
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.2.0/libwasmvm_muslc.x86_64.a ; \
-      cp /lib/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.a ; \
-    fi
-
-RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.2.0/libwasmvm_muslc.aarch64.a ; \
-      cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a ; \
-    fi
 
 # Build Chain Binary
 WORKDIR /go/src/github.com/Team-Kujira
@@ -32,6 +21,15 @@ WORKDIR /go/src/github.com/Team-Kujira/core
 RUN git fetch
 RUN git checkout ${VERSION}
 WORKDIR /go/src/github.com/Team-Kujira/core
+
+# Install CosmWasm.
+RUN set -eux; \
+    WASM_VERSION=$(go list -m all | grep github.com/CosmWasm/wasmvm | awk '{print $NF}'); \
+    echo ${WASM_VERSION} ;\
+    if [ ! -z "${WASM_VERSION}" ]; then \
+      wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASM_VERSION}/libwasmvm_muslc.$(uname -m).a; \
+    fi; \
+    go mod download;
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
       BUILD_TAGS=${BUILD_TAGS} make install ; \
