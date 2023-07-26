@@ -31,6 +31,7 @@ RUN set -eux; \
     fi; \
     go mod download;
 
+# Build Chain Binary
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
       BUILD_TAGS=${BUILD_TAGS} make install ; \
     fi

@@ -23,6 +23,7 @@ RUN git fetch
 RUN git checkout ${VERSION}
 WORKDIR /go/src/github.com/osmosis-labs/osmosis
 
+# Install CosmWasm.
 RUN set -eux; \
     WASM_VERSION=$(go list -m all | grep github.com/CosmWasm/wasmvm | awk '{print $NF}'); \
     echo ${WASM_VERSION} ;\
@@ -31,6 +32,7 @@ RUN set -eux; \
     fi; \
     go mod download;
 
+# Build Chain Binary
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
       BUILD_TAGS=${BUILD_TAGS} make install ; \
     fi

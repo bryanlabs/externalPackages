@@ -15,17 +15,6 @@ ARG LD_FLAGS=-linkmode=external \
 RUN apt-get update -y
 RUN apt-get install -y make git bash gcc ncurses-dev curl jq musl-dev openssl
 
-# Install build dependencies.
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a ; \
-      cp /lib/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.a ; \
-    fi
-
-RUN if  [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      wget -P /lib https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.aarch64.a ; \
-      cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a ; \
-    fi
-
 # Build
 WORKDIR /go/src/github.com/ODIN-PROTOCOL
 RUN git clone https://github.com/ODIN-PROTOCOL/odin-core.git
@@ -35,6 +24,16 @@ RUN git checkout ${VERSION}
 # WORKDIR /go/src/github.com/ODIN-PROTOCOL/odin-core/cmd/odind
 WORKDIR /go/src/github.com/ODIN-PROTOCOL/odin-core
 
+# Install CosmWasm.
+RUN set -eux; \
+    WASM_VERSION=$(go list -m all | grep github.com/CosmWasm/wasmvm | awk '{print $NF}'); \
+    echo ${WASM_VERSION} ;\
+    if [ ! -z "${WASM_VERSION}" ]; then \
+      wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASM_VERSION}/libwasmvm_muslc.$(uname -m).a; \
+    fi; \
+    go mod download;
+
+# Build Chain Binary
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
       make install ; \
     fi

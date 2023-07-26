@@ -26,26 +26,14 @@ jobs:
             image: ghcr.io/defiantlabs/osmosisd
             platforms: linux/amd64
             tag: v16.1.0
-          # - dockerfile: ./kujirad/Dockerfile
-          #   image: ghcr.io/defiantlabs/kujirad
-          #   platforms: linux/amd64
-          #   tag: v0.8.7
-          # - dockerfile: ./junod/Dockerfile
-          #   image: ghcr.io/defiantlabs/junod
-          #   platforms: linux/amd64
-          #   tag: v13.0.0
-          # - dockerfile: ./gaiad/Dockerfile
-          #   image: ghcr.io/defiantlabs/gaiad
-          #   platforms: linux/amd64
-          #   tag: v9.0.2-reece
-          # - dockerfile: ./babylond/Dockerfile
-          #   image: ghcr.io/defiantlabs/babylond
-          #   platforms: linux/amd64
-          #   tag: v0.5.0
-          # - dockerfile: ./odind/Dockerfile
-          #   image: ghcr.io/defiantlabs/odind
-          #   tag: v0.6.2
-          #   platforms: linux/amd64
+          - dockerfile: ./kujirad/Dockerfile
+            image: ghcr.io/defiantlabs/kujirad
+            platforms: linux/amd64
+            tag: v0.8.7
+          - dockerfile: ./odind/Dockerfile
+            image: ghcr.io/defiantlabs/odind
+            tag: v0.6.2
+            platforms: linux/amd64
     permissions:
       contents: read
       packages: write
