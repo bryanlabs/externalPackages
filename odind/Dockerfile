@@ -52,15 +52,10 @@ COPY --from=build-env /usr/bin/jq /bin/jq
 COPY --from=build-env /go/pkg/mod/github.com/slandymani/go-owasm@v0.2.0/api/libgo_owasm.so /usr/lib/
 COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.0.0/api/libwasmvm.x86_64.so /usr/lib/
 
-# RUN mkdir -p /etc/ssl/certs/
 RUN apt-get update && apt-get install -y ca-certificates
 
-
-# Copy user
-COPY --from=busybox /etc/passwd /etc/passwd
-COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
-
-# Set home directory and user
+RUN adduser --system --uid 1137 defiant
+RUN addgroup -system --gid 1137 defiant
 WORKDIR /home/defiant
 RUN chown -R defiant /home/defiant
 USER defiant
