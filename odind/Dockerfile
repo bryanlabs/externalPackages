@@ -1,19 +1,14 @@
-FROM golang:1.19 AS build-env
+FROM golang:1.19-buster AS build-env
 
-# Customize to your build env
-
-# TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM
-
-# Use muslc for static libs
-ARG BUILD_TAGS=muslc,netgo
+ARG BUILD_TAGS=netgo
 ARG VERSION
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
-RUN apt-get update -y
-RUN apt-get install -y make git bash gcc ncurses-dev curl jq musl-dev openssl
+RUN apt-get update && \
+    apt-get install -y make git bash gcc linux-headers-amd64 libudev-dev libncurses-dev openssh-client curl jq
 
 # Build
 WORKDIR /go/src/github.com/ODIN-PROTOCOL
@@ -41,6 +36,27 @@ RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
 RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
       make install ; \
     fi
+
+# Use Debian Buster slim for the final image
+FROM debian:buster-slim
+
+WORKDIR /bin
+
+LABEL org.opencontainers.image.source="https://github.com/defiantchain/osmosisd:${VERSION}"
+
+COPY --from=build-env /go/bin/odind /bin
+COPY --from=build-env /go/bin/yoda /bin
+COPY --from=build-env /usr/bin/ldd /bin/ldd
+COPY --from=build-env /usr/bin/curl /bin/curl
+COPY --from=build-env /usr/bin/jq /bin/jq
+COPY --from=build-env /go/pkg/mod/github.com/slandymani/go-owasm@v0.2.0/api/libgo_owasm.so /usr/lib/
+COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.0.0/api/libwasmvm.x86_64.so /usr/lib/
+
+# RUN mkdir -p /etc/ssl/certs/
+RUN apt-get update && apt-get install -y ca-certificates
+# COPY --from=build-env /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem
+# COPY --from=build-env /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
 
 RUN adduser --system --uid 1137 defiant
 RUN addgroup -system --gid 1137 defiant
