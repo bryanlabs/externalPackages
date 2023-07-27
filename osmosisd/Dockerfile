@@ -50,7 +50,7 @@ FROM scratch
 WORKDIR /bin
 
 # Label should match your github repo
-LABEL org.opencontainers.image.source="https://github.com/defiantchain/osmosisd:${VERSION}"
+LABEL org.opencontainers.image.source="https://github.com/defiantlabs/osmosisd:${VERSION}"
 
 # Installs all binaries built with go.
 COPY --from=build-env /go/bin/osmosisd /bin
@@ -108,7 +108,7 @@ netstat \
 ; do ln sh $binary; done
 
 
-# Copy user from busybox to scratch
+# Copy user
 COPY --from=busybox /etc/passwd /etc/passwd
 COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
 

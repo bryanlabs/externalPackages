@@ -42,7 +42,7 @@ FROM debian:buster-slim
 
 WORKDIR /bin
 
-LABEL org.opencontainers.image.source="https://github.com/defiantchain/osmosisd:${VERSION}"
+LABEL org.opencontainers.image.source="https://github.com/defiantlabs/odind:${VERSION}"
 
 COPY --from=build-env /go/bin/odind /bin
 COPY --from=build-env /go/bin/yoda /bin
@@ -54,16 +54,13 @@ COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.0.0/api/libwas
 
 # RUN mkdir -p /etc/ssl/certs/
 RUN apt-get update && apt-get install -y ca-certificates
-# COPY --from=build-env /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem
-# COPY --from=build-env /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 
-RUN adduser --system --uid 1137 defiant
-RUN addgroup -system --gid 1137 defiant
+# Copy user
+COPY --from=busybox /etc/passwd /etc/passwd
+COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
 
-# Label should match your github repo
-LABEL org.opencontainers.image.source="https://github.com/defiantlabs/odind"
-
+# Set home directory and user
 WORKDIR /home/defiant
 RUN chown -R defiant /home/defiant
 USER defiant
