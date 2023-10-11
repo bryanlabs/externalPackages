@@ -1,12 +1,12 @@
-FROM golang:1.19.7-alpine3.16 AS build-env
+FROM golang:1.20-alpine3.16 AS build-env
 
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM
 
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
-ARG VERSION
-ARG ORACLE_VERSION=v0.6.2
+ARG VERSION=v0.9.0
+ARG ORACLE_VERSION=v0.7.2
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
@@ -19,7 +19,7 @@ WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/core.git
 WORKDIR /go/src/github.com/Team-Kujira/core
 RUN git fetch
-RUN git checkout ${VERSION}
+RUN git checkout v0.9.0
 WORKDIR /go/src/github.com/Team-Kujira/core
 
 # Install CosmWasm.
