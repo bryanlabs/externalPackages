@@ -79,6 +79,7 @@ COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
 # Install trusted CA certificates for curl
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/ca-certificates.crt
+COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/certs/ca-certificates.crt
 
 # Install cli tools from busybox
 COPY --from=busybox /bin/ln /bin/ln
