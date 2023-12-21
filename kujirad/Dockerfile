@@ -6,7 +6,7 @@ ARG TARGETPLATFORM
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
 ARG VERSION=v0.9.1
-ARG ORACLE_VERSION=v0.8.3
+ARG ORACLE_VERSION=v0.9.0
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
