@@ -49,8 +49,8 @@ COPY --from=build-env /go/bin/yoda /bin
 COPY --from=build-env /usr/bin/ldd /bin/ldd
 COPY --from=build-env /usr/bin/curl /bin/curl
 COPY --from=build-env /usr/bin/jq /bin/jq
-COPY --from=build-env /go/pkg/mod/github.com/slandymani/go-owasm@v0.2.0/api/libgo_owasm.so /usr/lib/
-COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.0.0/api/libwasmvm.x86_64.so /usr/lib/
+COPY --from=build-env /go/pkg/mod/github.com/odin-protocol/go-owasm@v0.2.5/api/libgo_owasm.so /usr/lib/
+COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.5.0/internal/api/libwasmvm.x86_64.so /usr/lib/
 
 RUN apt-get update && apt-get install -y ca-certificates
 
