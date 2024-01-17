@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine3.16 AS build-env
+FROM golang:1.21-alpine3.17 AS build-env
 
 # Customize to your build env
 
@@ -71,8 +71,8 @@ COPY --from=build-env /usr/lib/libonig.so.5 /lib
 COPY --from=build-env /usr/lib/libcurl.so.4 /lib
 COPY --from=build-env /lib/libz.so.1 /lib
 COPY --from=build-env /usr/lib/libnghttp2.so.14 /lib
-COPY --from=build-env /lib/libssl.so.1.1 /lib
-COPY --from=build-env /lib/libcrypto.so.1.1 /lib
+COPY --from=build-env /lib/libssl.so* /lib
+COPY --from=build-env /lib/libcrypto.so* /lib
 COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
 COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
 
