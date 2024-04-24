@@ -25,14 +25,14 @@ jobs:
           - dockerfile: ./osmosisd/Dockerfile
             image: ghcr.io/defiantlabs/osmosisd
             platforms: linux/amd64
-            tag: v22.0.0
+            tag: v24.0.1
           - dockerfile: ./kujirad/Dockerfile
             image: ghcr.io/defiantlabs/kujirad
             platforms: linux/amd64
-            tag: v0.9.3-1
+            tag: v1.0.2
           - dockerfile: ./odind/Dockerfile
             image: ghcr.io/defiantlabs/odind
-            tag: v0.7.7
+            tag: v0.7.12
             platforms: linux/amd64
     permissions:
       contents: read
