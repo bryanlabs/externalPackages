@@ -1,120 +1,59 @@
-FROM golang:1.21-alpine3.17 AS build-env
+FROM golang:1.21 AS build-env
 
 # Customize to your build env
 
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
-ARG TARGETPLATFORM
-
-# Use muslc for static libs
-ARG BUILD_TAGS=muslc
+ARG TARGETPLATFORM="linux/amd64"
+# Version to build. Default is empty
 ARG VERSION
-ARG LD_FLAGS=-linkmode=external \
--extldflags '-Wl,-z,muldefs -static'
+
+ARG LEDGER_ENABLED="false"
+# Cosmos build options
+ARG COSMOS_BUILD_OPTIONS=""
 
 # Install cli tools for building and final image
-RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
-RUN apk add --no-cache musl-dev
+RUN apt-get update && apt-get install -y make git bash gcc curl jq
 
-# Build
 WORKDIR /go/src/github.com/babylonchain
 RUN git clone https://github.com/babylonchain/babylon.git
 WORKDIR /go/src/github.com/babylonchain/babylon
 RUN git fetch
 RUN git checkout ${VERSION}
 WORKDIR /go/src/github.com/babylonchain/babylon
-
-# Install CosmWasm.
-RUN set -eux; \
-    WASM_VERSION=$(go list -m all | grep github.com/CosmWasm/wasmvm | awk '{print $NF}'); \
-    echo ${WASM_VERSION} ;\
-    if [ ! -z "${WASM_VERSION}" ]; then \
-      wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASM_VERSION}/libwasmvm_muslc.$(uname -m).a; \
-    fi; \
-    go mod download;
-
-# Build Chain Binary
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      BUILD_TAGS=${BUILD_TAGS} make install ; \
+# If version is set, then checkout this version
+RUN if [ -n "${VERSION}" ]; then \
+        git checkout -f ${VERSION}; \
     fi
 
-RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      BUILD_TAGS=${BUILD_TAGS} make install ; \
-    fi
+RUN LEDGER_ENABLED=$LEDGER_ENABLED \
+    BUILD_TAGS=$BUILD_TAGS \
+    COSMOS_BUILD_OPTIONS=$COSMOS_BUILD_OPTIONS \
+    LINK_STATICALLY=false \
+    make build
 
-# Use busybox to create a user
-FROM busybox:stable-musl AS busybox
-RUN addgroup --gid 1137 -S defiant && adduser --uid 1137 -S defiant -G defiant
-
-# Use scratch for the final image
-FROM scratch
-WORKDIR /bin
+FROM debian:bookworm-slim AS run
+# Create a user
+RUN addgroup --gid 1137 --system defiant && adduser --uid 1137 --gid 1137 --system --home /home/defiant defiant
+RUN apt-get update && apt-get install -y bash curl jq wget
 
 # Label should match your github repo
-LABEL org.opencontainers.image.source="https://github.com/defiantchain/babylond:${VERSION}"
+LABEL org.opencontainers.image.source="https://github.com/babylonchain/babylond:${VERSION}"
 
-# Installs all binaries built with go.
-COPY --from=build-env /go/bin/babylond /bin
+# Install libraries
+# Cosmwasm - Download correct libwasmvm version
+COPY --from=build-env /go/src/github.com/babylonchain/babylon/go.mod /tmp
+RUN WASMVM_VERSION=$(grep github.com/CosmWasm/wasmvm /tmp/go.mod | cut -d' ' -f2) && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm.$(uname -m).so \
+        -O /lib/libwasmvm.$(uname -m).so && \
+    # verify checksum
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm.$(uname -m).so | grep $(cat /tmp/checksums.txt | grep libwasmvm.$(uname -m) | cut -d ' ' -f 1)
+RUN rm -f /tmp/go.mod
 
-# Other binaries we want to keep.
-COPY --from=build-env /usr/bin/ldd /bin/ldd
-COPY --from=build-env /usr/bin/curl /bin/curl
-COPY --from=build-env /usr/bin/jq /bin/jq
-
-# Install Libraries
-COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
-COPY --from=build-env /lib/ld-musl*.so.1* /lib
-
-# jq Libraries
-COPY --from=build-env /usr/lib/libonig.so.5 /lib
-
-# curl Libraries
-COPY --from=build-env /usr/lib/libcurl.so.4 /lib
-COPY --from=build-env /lib/libz.so.1 /lib
-COPY --from=build-env /usr/lib/libnghttp2.so.14 /lib
-COPY --from=build-env /lib/libssl.so* /lib
-COPY --from=build-env /lib/libcrypto.so* /lib
-COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
-COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
-
-# Install trusted CA certificates for curl
-COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
-COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/ca-certificates.crt
-COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/certs/ca-certificates.crt
-
-# Install cli tools from busybox
-COPY --from=busybox /bin/ln /bin/ln
-COPY --from=busybox /bin/ln /bin/sh
-
-# Link each binary you want to sh to save space.
-RUN for binary in \
-dd \
-vi \
-chown \
-id \
-cp \
-ls \
-sh \
-cat \
-less \
-grep \
-sleep \
-env \
-tar \
-tee \
-du \
-sort \
-head \
-df \
-nc \
-netstat \
-; do ln sh $binary; done
-
-
-# Copy user
-COPY --from=busybox /etc/passwd /etc/passwd
-COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
+COPY --from=build-env /go/src/github.com/babylonchain/babylon/build/babylond /bin/babylond
 
 # Set home directory and user
 WORKDIR /home/defiant
 RUN chown -R defiant /home/defiant
+RUN chmod g+s /home/defiant
 USER defiant
