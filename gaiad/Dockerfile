@@ -1,26 +1,27 @@
-FROM golang:1.21.8-alpine3.18 AS build-env
+FROM golang:1.21-alpine3.17 AS build-env
+
+# Customize to your build env
 
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM
 
 # Use muslc for static libs
-ARG BUILD_TAGS="muslc"
-ARG VERSION=v1.0.2
-ARG ORACLE_VERSION=v0.12.5
+ARG BUILD_TAGS=muslc
+ARG VERSION
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
-RUN apk update && apk add --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
+RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
 RUN apk add --no-cache musl-dev
 
-# Build Chain Binary
-WORKDIR /go/src/github.com/Team-Kujira
-RUN git clone https://github.com/Team-Kujira/core.git
-WORKDIR /go/src/github.com/Team-Kujira/core
+# Build
+WORKDIR /go/src/github.com/cosmos
+RUN git clone https://github.com/cosmos/gaia.git
+WORKDIR /go/src/github.com/cosmos/gaia
 RUN git fetch
-RUN git checkout v1.0.2
-WORKDIR /go/src/github.com/Team-Kujira/core
+RUN git checkout ${VERSION}
+WORKDIR /go/src/github.com/cosmos/gaia
 
 # Install CosmWasm.
 RUN set -eux; \
@@ -40,21 +41,6 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
       BUILD_TAGS=${BUILD_TAGS} make install ; \
     fi
 
-# Build Oracle
-WORKDIR /go/src/github.com/Team-Kujira
-RUN git clone https://github.com/Team-Kujira/oracle-price-feeder.git
-WORKDIR /go/src/github.com/Team-Kujira/oracle-price-feeder
-RUN git fetch
-RUN git checkout ${ORACLE_VERSION}
-
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
-    fi
-
-RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go install -ldflags ${LD_FLAGS} -tags ${BUILD_TAGS} ; \
-    fi
-
 # Use busybox to create a user
 FROM busybox:stable-musl AS busybox
 RUN addgroup --gid 1137 -S defiant && adduser --uid 1137 -S defiant -G defiant
@@ -64,11 +50,10 @@ FROM scratch
 WORKDIR /bin
 
 # Label should match your github repo
-LABEL org.opencontainers.image.source="https://github.com/defiantlabs/kujirad:${VERSION}"
+LABEL org.opencontainers.image.source="https://github.com/defiantlabs/gaiad:${VERSION}"
 
 # Installs all binaries built with go.
-COPY --from=build-env /go/bin/kujirad /bin
-COPY --from=build-env /go/bin/price-feeder /bin
+COPY --from=build-env /go/bin/gaiad /bin
 
 # Other binaries we want to keep.
 COPY --from=build-env /usr/bin/ldd /bin/ldd
@@ -86,14 +71,14 @@ COPY --from=build-env /usr/lib/libonig.so.5 /lib
 COPY --from=build-env /usr/lib/libcurl.so.4 /lib
 COPY --from=build-env /lib/libz.so.1 /lib
 COPY --from=build-env /usr/lib/libnghttp2.so.14 /lib
-
 COPY --from=build-env /lib/libssl.so* /lib
-COPY --from=build-env /lib/libcrypto.so.* /lib
+COPY --from=build-env /lib/libcrypto.so* /lib
 COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
 COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
 
 # Install trusted CA certificates for curl
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
+COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/ca-certificates.crt
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/certs/ca-certificates.crt
 
 # Install cli tools from busybox
@@ -107,7 +92,6 @@ vi \
 chown \
 id \
 cp \
-mkdir \
 ls \
 sh \
 cat \
