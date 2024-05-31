@@ -38,7 +38,7 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
     fi
 
 # Use Debian Buster slim for the final image
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 WORKDIR /bin
 
