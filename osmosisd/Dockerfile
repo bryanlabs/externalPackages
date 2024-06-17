@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine3.17 AS build-env
+FROM golang:1.21.8-alpine3.18 AS build-env
 
 # Customize to your build env
 
