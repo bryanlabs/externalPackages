@@ -11,7 +11,7 @@ ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
-RUN apk update && apk add --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
+RUN apk update && apk add --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq coreutils
 RUN apk add --no-cache musl-dev
 
 # Build Chain Binary
@@ -74,6 +74,7 @@ COPY --from=build-env /go/bin/price-feeder /bin
 COPY --from=build-env /usr/bin/ldd /bin/ldd
 COPY --from=build-env /usr/bin/curl /bin/curl
 COPY --from=build-env /usr/bin/jq /bin/jq
+COPY --from=build-env /usr/bin/tac /bin/tac
 
 # Install Libraries
 COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
@@ -81,6 +82,12 @@ COPY --from=build-env /lib/ld-musl*.so.1* /lib
 
 # jq Libraries
 COPY --from=build-env /usr/lib/libonig.so.5 /lib
+
+# tac Libraries
+COPY --from=build-env /lib/libacl.so* /lib
+COPY --from=build-env /lib/libattr.so* /lib
+COPY --from=build-env /lib/libutmps.so* /lib
+COPY --from=build-env /lib/libskarnet.so* /lib
 
 # curl Libraries
 COPY --from=build-env /usr/lib/libcurl.so.4 /lib
@@ -91,6 +98,9 @@ COPY --from=build-env /lib/libssl.so* /lib
 COPY --from=build-env /lib/libcrypto.so.* /lib
 COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
 COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
+
+# zstd Libraries
+COPY --from=build-env /usr/lib/libzstd.so.* /lib
 
 # Install trusted CA certificates for curl
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
@@ -124,7 +134,6 @@ df \
 nc \
 netstat \
 ; do ln sh $binary; done
-
 
 # Copy user
 COPY --from=busybox /etc/passwd /etc/passwd

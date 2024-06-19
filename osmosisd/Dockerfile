@@ -12,7 +12,7 @@ ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
 
 # Install cli tools for building and final image
-RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
+RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq coreutils
 RUN apk add --no-cache musl-dev
 
 # Build
@@ -59,6 +59,7 @@ COPY --from=build-env /go/bin/osmosisd /bin
 COPY --from=build-env /usr/bin/ldd /bin/ldd
 COPY --from=build-env /usr/bin/curl /bin/curl
 COPY --from=build-env /usr/bin/jq /bin/jq
+COPY --from=build-env /usr/bin/tac /bin/tac
 
 # Install Libraries
 COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
@@ -66,6 +67,12 @@ COPY --from=build-env /lib/ld-musl*.so.1* /lib
 
 # jq Libraries
 COPY --from=build-env /usr/lib/libonig.so.5 /lib
+
+# tac Libraries
+COPY --from=build-env /lib/libacl.so* /lib
+COPY --from=build-env /lib/libattr.so* /lib
+COPY --from=build-env /lib/libutmps.so* /lib
+COPY --from=build-env /lib/libskarnet.so* /lib
 
 # curl Libraries
 COPY --from=build-env /usr/lib/libcurl.so.4 /lib
@@ -80,6 +87,7 @@ COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/ca-certificates.crt
 COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/certs/ca-certificates.crt
+
 
 # Install cli tools from busybox
 COPY --from=busybox /bin/ln /bin/ln

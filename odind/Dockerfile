@@ -8,7 +8,7 @@ ARG LD_FLAGS=-linkmode=external \
 
 # Install cli tools for building and final image
 RUN apt-get update && \
-    apt-get install -y make git bash gcc linux-headers-amd64 libudev-dev libncurses-dev openssh-client curl jq
+    apt-get install -y make git bash gcc linux-headers-amd64 libudev-dev libncurses-dev openssh-client curl jq coreutils
 
 # Build
 WORKDIR /go/src/github.com/ODIN-PROTOCOL
