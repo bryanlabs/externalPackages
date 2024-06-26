@@ -5,7 +5,7 @@ ARG TARGETPLATFORM
 
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
-ARG VERSION=v1.0.2
+ARG VERSION=v1.1.0
 ARG ORACLE_VERSION=v0.12.5
 ARG LD_FLAGS=-linkmode=external \
 -extldflags '-Wl,-z,muldefs -static'
@@ -19,7 +19,7 @@ WORKDIR /go/src/github.com/Team-Kujira
 RUN git clone https://github.com/Team-Kujira/core.git
 WORKDIR /go/src/github.com/Team-Kujira/core
 RUN git fetch
-RUN git checkout v1.0.2
+RUN git checkout v1.1.0
 WORKDIR /go/src/github.com/Team-Kujira/core
 
 # Install CosmWasm.
