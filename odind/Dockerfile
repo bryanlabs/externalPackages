@@ -41,7 +41,7 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
 FROM debian:bookworm-slim
 
 WORKDIR /bin
-
+ARG VERSION
 LABEL org.opencontainers.image.source="https://github.com/defiantlabs/odind:${VERSION}"
 
 COPY --from=build-env /go/bin/odind /bin
@@ -55,7 +55,11 @@ COPY --from=build-env /go/pkg/mod/github.com/odin-protocol/go-owasm@v*/api/libgo
 RUN apt-get update && apt-get install -y ca-certificates
 
 RUN adduser --system --uid 1137 defiant
-RUN addgroup -system --gid 1137 defiant
+RUN addgroup --system --gid 1137 defiant
+
+# Create /home/operator/cosmos and add symlink before switching user
+RUN mkdir -p /home/defiant/cosmos
+
 WORKDIR /home/defiant
 RUN chown -R defiant /home/defiant
 USER defiant
