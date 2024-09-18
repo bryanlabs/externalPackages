@@ -1,110 +1,34 @@
-FROM golang:1.22.7-alpine3.20 AS build-env
+# Declare build arguments at the top of the Dockerfile
+ARG OSMOSIS_VERSION=26.0.0
+ARG ALPINE_VERSION=3.20
+ARG UID=1137
+ARG USER=defiant
 
-# Use muslc for static libs
-ARG BUILD_TAGS=muslc
+# Stage 1: Extract the osmosisd binary from the osmolabs/osmosis image
+FROM osmolabs/osmosis:${OSMOSIS_VERSION} AS source
+
+# Final Stage: Use a specific version of Alpine as the base image
+FROM alpine:${ALPINE_VERSION}
+ARG UID
+ARG USER
+WORKDIR /home/${USER}
+
+# Install necessary tools and libraries in one command, create user
+RUN apk add --no-cache curl jq coreutils oniguruma libcurl libgcc nghttp2-libs brotli openssl sudo \
+    && addgroup -g ${UID} -S ${USER} \
+    && adduser -u ${UID} -S ${USER} -G ${USER} \
+    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} \
+    && chmod 0440 /etc/sudoers.d/${USER}
+
+# Use build arguments for dynamic labeling
 ARG VERSION
-# ARG LD_FLAGS=-linkmode=external \
-# -extldflags '-Wl,-z,muldefs -static'
-RUN export GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=1 LDFLAGS='-linkmode external -extldflags "-static"'
-# Install cli tools for building and final image
-RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq coreutils
-RUN apk add --no-cache musl-dev
+LABEL org.opencontainers.image.source="https://github.com/defiantlabs/osmosisd:${VERSION}"
 
-# Build
-WORKDIR /go/src/github.com/osmosis-labs
-RUN git clone https://github.com/osmosis-labs/osmosis.git
-WORKDIR /go/src/github.com/osmosis-labs/osmosis
-RUN git fetch
-RUN git checkout ${VERSION}
-WORKDIR /go/src/github.com/osmosis-labs/osmosis
+# Copy the osmosisd binary from the source image
+COPY --from=source /bin/osmosisd /bin/osmosisd
 
-# Install CosmWasm.
-RUN set -eux; \
-    WASM_VERSION=$(go list -m all | grep github.com/CosmWasm/wasmvm | awk '{print $NF}'); \
-    echo ${WASM_VERSION}; \
-    wget -O /lib/libwasmvm_muslc.x86_64.a https://github.com/CosmWasm/wasmvm/releases/download/${WASM_VERSION}/libwasmvm_muslc.x86_64.a; \
-    go mod download;
+# Switch to non-root user
+USER ${USER}
 
-RUN echo ${BUILD_TAGS}
-
-# Build Chain Binary for amd64
-RUN BUILD_TAGS=${BUILD_TAGS} make install
-
-# # Use busybox to create a user
-# FROM busybox:stable-musl AS busybox
-# RUN addgroup --gid 1137 -S defiant && adduser --uid 1137 -S defiant -G defiant
-
-# # Use scratch for the final image
-# FROM scratch
-# WORKDIR /bin
-# ARG VERSION
-
-# # Label should match your GitHub repo
-# LABEL org.opencontainers.image.source="https://github.com/defiantlabs/osmosisd:${VERSION}"
-
-# # Copy the built binary
-# COPY --from=build-env /go/bin/osmosisd /bin
-
-# # Copy other necessary binaries
-# COPY --from=build-env /usr/bin/ldd /bin/ldd
-# COPY --from=build-env /usr/bin/curl /bin/curl
-# COPY --from=build-env /usr/bin/jq /bin/jq
-# COPY --from=build-env /usr/bin/tac /bin/tac
-
-# # Install Libraries
-# COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
-# COPY --from=build-env /lib/ld-musl*.so.1* /lib
-# COPY --from=build-env /usr/lib/libonig.so.5 /lib
-# COPY --from=build-env /lib/libacl.so* /lib
-# COPY --from=build-env /lib/libattr.so* /lib
-# COPY --from=build-env /lib/libutmps.so* /lib
-# COPY --from=build-env /lib/libskarnet.so* /lib
-# COPY --from=build-env /usr/lib/libcurl.so.4 /lib
-# COPY --from=build-env /lib/libz.so.1 /lib
-# COPY --from=build-env /usr/lib/libnghttp2.so.14 /lib
-# COPY --from=build-env /lib/libssl.so* /lib
-# COPY --from=build-env /lib/libcrypto.so* /lib
-# COPY --from=build-env /usr/lib/libbrotlidec.so.1 /lib
-# COPY --from=build-env /usr/lib/libbrotlicommon.so.1 /lib
-
-# # Install trusted CA certificates for curl
-# COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/cert.pem
-# COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/ca-certificates.crt
-# COPY --from=build-env /etc/ssl/cert.pem /etc/ssl/certs/ca-certificates.crt
-
-# # Install cli tools from busybox
-# COPY --from=busybox /bin/ln /bin/ln
-# COPY --from=busybox /bin/ln /bin/sh
-
-# # Link each binary you want to sh to save space.
-# RUN for binary in \
-# dd \
-# vi \
-# chown \
-# id \
-# cp \
-# ls \
-# sh \
-# cat \
-# less \
-# grep \
-# sleep \
-# env \
-# tar \
-# tee \
-# du \
-# sort \
-# head \
-# df \
-# nc \
-# netstat \
-# ; do ln sh $binary; done
-
-# # Copy user
-# COPY --from=busybox /etc/passwd /etc/passwd
-# COPY --from=busybox --chown=1137:1137 /home/defiant /home/defiant
-
-# # Set home directory and user
-# WORKDIR /home/defiant
-# RUN chown -R defiant /home/defiant
-# USER defiant
+# Set default entrypoint and command (optional, if applicable)
+ENTRYPOINT ["/bin/sh"]
