@@ -1,0 +1,32 @@
+# Set build arguments for ODIN and Alpine versions, user ID, and user name
+ARG ODIN_VERSION=26.0.0
+ARG ALPINE_VERSION=3.20
+ARG UID=1025
+ARG USER=heighliner
+
+FROM alpine:${ALPINE_VERSION}
+ARG UID
+ARG USER
+
+# Set working directory
+WORKDIR /home/${USER}
+
+# Install necessary runtime tools and libraries
+RUN apk add --no-cache curl jq coreutils oniguruma libcurl libgcc \
+    nghttp2-libs brotli openssl sudo
+
+# Create user and add to sudoers
+RUN addgroup -g ${UID} -S ${USER} \
+    && adduser -u ${UID} -S ${USER} -G ${USER} \
+    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} \
+    && chmod 0440 /etc/sudoers.d/${USER}
+
+RUN wget https://github.com/ODIN-PROTOCOL/odin-core/releases/download/v0.9.3/odind-v0.9.3-linux-amd64 -O /bin/odind && chmod +x /bin/odind
+
+# Switch to non-root user
+USER ${USER}
+
+# Set default entrypoint
+ENTRYPOINT ["/bin/sh"]
+
+

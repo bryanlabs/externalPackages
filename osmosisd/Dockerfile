@@ -1,8 +1,8 @@
 # Declare build arguments at the top of the Dockerfile
 ARG OSMOSIS_VERSION=26.0.0
 ARG ALPINE_VERSION=3.20
-ARG UID=1137
-ARG USER=defiant
+ARG UID=1025
+ARG USER=heighliner
 
 # Stage 1: Extract the osmosisd binary from the osmolabs/osmosis image
 FROM osmolabs/osmosis:${OSMOSIS_VERSION} AS source

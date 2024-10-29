@@ -1,65 +1,47 @@
-FROM golang:1.22 AS build-env
+# Declare build arguments at the top of the Dockerfile
+ARG ODIN_VERSION=v0.9.4
+ARG YODA_VERSION=v0.10.0
+ARG ALPINE_VERSION=3.20
+ARG UID=1025
+ARG USER=heighliner
 
-ARG TARGETPLATFORM
-ARG BUILD_TAGS=netgo
-ARG VERSION
-ARG LD_FLAGS=-linkmode=external \
--extldflags '-Wl,-z,muldefs -static'
+# Stage 1: Extract the odind binary from the odinprotocol/core image
+FROM odinprotocol/core:${ODIN_VERSION} AS odin-source
 
-# Install cli tools for building and final image
-RUN apt-get update && \
-    apt-get install -y make git bash gcc linux-headers-amd64 libudev-dev libncurses-dev openssh-client curl jq coreutils
+# Final Stage: Use a specific version of Alpine as the base image
+FROM alpine:${ALPINE_VERSION}
 
-# Build
-WORKDIR /go/src/github.com/ODIN-PROTOCOL
-RUN git clone https://github.com/ODIN-PROTOCOL/odin-core.git
-WORKDIR /go/src/github.com/ODIN-PROTOCOL/odin-core
-RUN git fetch
-RUN git checkout ${VERSION}
-# WORKDIR /go/src/github.com/ODIN-PROTOCOL/odin-core/cmd/odind
-WORKDIR /go/src/github.com/ODIN-PROTOCOL/odin-core
+# Declare build arguments for reuse
+ARG UID
+ARG USER
+ARG YODA_VERSION
 
-# Install CosmWasm.
-RUN set -eux; \
-    WASM_VERSION=$(go list -m all | grep github.com/CosmWasm/wasmvm | awk '{print $NF}'); \
-    echo ${WASM_VERSION} ;\
-    if [ ! -z "${WASM_VERSION}" ]; then \
-      wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASM_VERSION}/libwasmvm_muslc.$(uname -m).a; \
-    fi; \
-    go mod download;
+# Set working directory
+WORKDIR /home/${USER}
 
-# Build Chain Binary
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] ; then \
-      make install ; \
-    fi
+# Install necessary tools and libraries, create user, and set up sudoers
+RUN apk add --no-cache \
+      curl jq coreutils oniguruma libcurl libgcc nghttp2-libs brotli openssl sudo \
+    && addgroup -g ${UID} -S ${USER} \
+    && adduser -u ${UID} -S ${USER} -G ${USER} \
+    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} \
+    && chmod 0440 /etc/sudoers.d/${USER}
 
-RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] ; then \
-      make install ; \
-    fi
-
-# Use Debian Buster slim for the final image
-FROM debian:bookworm-slim
-
-WORKDIR /bin
+# Use build argument for dynamic labeling
 ARG VERSION
 LABEL org.opencontainers.image.source="https://github.com/defiantlabs/odind:${VERSION}"
 
-COPY --from=build-env /go/bin/odind /bin
-COPY --from=build-env /go/bin/yoda /bin
-COPY --from=build-env /usr/bin/ldd /bin/ldd
-COPY --from=build-env /usr/bin/curl /bin/curl
-COPY --from=build-env /usr/bin/jq /bin/jq
-COPY --from=build-env /go/pkg/mod/github.com/odin-protocol/go-owasm@v*/api/libgo_owasm.so /usr/lib/
-# COPY --from=build-env /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v*/internal/api/libwasmvm.x86_64.so /usr/lib/
+# Copy the odind binary from the source image
+COPY --from=odin-source /usr/bin/odind /bin/odind
+# COPY --from=odin-source /usr/bin/yoda /bin/yoda
 
-RUN apt-get update && apt-get install -y ca-certificates
+# Download the yoda binary and save it to /bin
+RUN curl -L -o /bin/yoda \
+      https://github.com/ODIN-PROTOCOL/odin-core/releases/download/${YODA_VERSION}/yoda-${YODA_VERSION}-linux-amd64 \
+    && chmod +x /bin/yoda
 
-RUN adduser --system --uid 1137 defiant
-RUN addgroup --system --gid 1137 defiant
+# Switch to non-root user
+USER ${USER}
 
-# Create /home/operator/cosmos and add symlink before switching user
-RUN mkdir -p /home/defiant/cosmos
-
-WORKDIR /home/defiant
-RUN chown -R defiant /home/defiant
-USER defiant
+# Set default entrypoint and command (if applicable)
+ENTRYPOINT ["/bin/sh"]
