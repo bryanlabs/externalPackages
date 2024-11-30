@@ -1,5 +1,5 @@
 # Declare build arguments at the top of the Dockerfile
-ARG ODIN_VERSION=v0.9.4
+ARG ODIN_VERSION=v0.9.3
 ARG YODA_VERSION=v0.10.0
 ARG ALPINE_VERSION=3.20
 ARG UID=1025
